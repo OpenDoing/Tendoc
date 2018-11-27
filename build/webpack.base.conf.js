@@ -22,11 +22,16 @@ module.exports = {
       ? config.build.assetsPublicPath
       : config.dev.assetsPublicPath
   },
+  // 引入第三方js
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
       '@': resolve('src'),
+      'jquery': resolve('static/js/jquery-3.2.1.min.js'),
+      'diff_match_patch': resolve('static/js/diff_match_patch.js'),
+      'sockjs': resolve('static/js/sockjs.min.js'),
+      'stomp': resolve('static/js/stomp.js'),
     }
   },
   module: {
