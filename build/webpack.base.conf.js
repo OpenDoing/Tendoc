@@ -31,7 +31,7 @@ module.exports = {
       'jquery': resolve('static/js/jquery-3.2.1.min.js'),
       'diff_match_patch': resolve('static/js/diff_match_patch.js'),
       'sockjs': resolve('static/js/sockjs.min.js'),
-      'stomp': resolve('static/js/stomp.js'),
+      'stompjs': resolve('static/js/stomp.js'),
     }
   },
   module: {

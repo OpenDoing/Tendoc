@@ -10,8 +10,15 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "diff-match-patch": "^1.0.4",
+    "element-ui": "^2.4.11",
+    "jquery": "^3.3.1",
+    "lodash": "^4.17.11",
+    "sockjs-client": "^1.3.0",
+    "stompjs": "^2.3.3",
     "vue": "^2.5.2",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "wangeditor": "^3.1.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
