@@ -5,8 +5,8 @@
         <el-col :span="2">logo</el-col>
         <el-col :span="13">logo</el-col>
         <el-col :span="3"><el-button type="primary" @click="connectDoc">加入编辑</el-button></el-col>
-        <el-col :span="2"><el-button @click="sendName">群发消息</el-button></el-col>
-        <el-col :span="2"><el-button @click="synchronization">分享</el-button></el-col>
+        <el-col :span="2"><el-button @click="showLocal">群发消息</el-button></el-col>
+        <el-col :span="2"><el-button >分享</el-button></el-col>
         <el-col :span="1">
           <el-dropdown>
             <el-button type="" plain="">
@@ -42,7 +42,7 @@
 import SockJS from 'sockjs-client'
 import $ from 'jquery'
 import Stomp from 'stompjs'
-import {config} from '@/utils/global.js'
+import config from '@/utils/global.js'
 import DiffMatchPatch from 'diff-match-patch'
 import _ from 'lodash'
 
@@ -73,16 +73,19 @@ export default {
     this.debouncedGetAnswer = _.debounce(this.synchronization, 500)
     this.debouncedGetAnswer2 = _.debounce(this.sendName, 500)
   },
-  mounted() {
+  mounted: {
 
   },
   methods: {
+    showLocal:function(){
+      alert(this.local);
+    },
     contentChange: function() {
       this.local = $("#content").val()
     },
     connectDoc: function() {
       let self = this;
-      const socket = new SockJS( config.base_url + '/endpointSang');
+      const socket = new SockJS( config.socket_url + '/endpointSang');
       let stompClient = Stomp.Stomp.over(socket);
 
       console.log(this.stompClient);
@@ -152,7 +155,7 @@ export default {
     min-height: 800px;
     margin-left: 15%;
     margin-right: 15%;
-    box-shadow: lightgray 10px 10px 20px 5px
+    box-shadow: lightgray 10px 10px 20px 5px;
     /*align-items:center;*/
     /*justify-content:center;*/
   }
