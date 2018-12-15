@@ -26,11 +26,13 @@
     </el-header>
     <el-main class="bg">
       <div class="edit_wrapper">
-        <div class="editorbody">
-          <el-input id="content" type="textarea" :rows="30" v-model="local">
+        <!--<div class="editorbody">-->
+          <!--<el-input id="content" type="textarea" :rows="30" v-model="local">-->
 
-          </el-input>
-        </div>
+          <!--</el-input>-->
+        <!--</div>-->
+        <div id="editorMenu" class="toolbar"></div>
+        <div id="editor" class="text"></div>
       </div>
     </el-main>
   </el-container>
@@ -43,6 +45,7 @@ import Stomp from 'stompjs'
 import config from '@/utils/global.js'
 import DiffMatchPatch from 'diff-match-patch'
 import _ from 'lodash'
+import E from 'wangeditor'
 
 export default {
   name: 'Edit1',
@@ -53,6 +56,7 @@ export default {
       otherText: '',
       local: '',
       imgurl: '../static/img/logo.png',
+      editorObject: new E('#editorMenu', '#editor')
     }
   },
   watch: {
@@ -73,9 +77,19 @@ export default {
     this.debouncedGetAnswer2 = _.debounce(this.sendName, 500)
   },
   mounted() {
-    // this.$options.methods.connectDoc();
+    this.initEditor()
   },
   methods: {
+    initEditor: function() {
+      // let editor = new E('#editorMenu', '#editor')
+      this.editorObject.customConfig.onchange = (html) => {
+        this.local = html
+      }
+      this.editorObject.create()
+      this.editorObject.txt.html(this.local)
+    },
+
+
     connectDoc: function() {
       let self = this;
       const socket = new SockJS( config.base_url + '/endpointSang');
@@ -93,11 +107,12 @@ export default {
       this.stompClient = stompClient;
     },
     sendName: function(){
+      let self = this;
       console.log(this.stompClient);
-      let name = $('#content').val();
+      // let name = $('#content').val();
       let userId = '2';
       let docId = '4';
-      this.stompClient.send("/message", {}, JSON.stringify({'content': name,'userid': userId,'docid': docId}));
+      this.stompClient.send("/message", {}, JSON.stringify({'content': self.editorObject.txt.html(),'userid': userId,'docid': docId}));
     },
     disconnect: function(stompClient) {
       if (this.stompClient != null) {
@@ -106,18 +121,16 @@ export default {
       console.log('Disconnected');
     },
     synchronization: function () {
-      const local = $("#content").val();
-      console.log(local);
-      console.log(this.otherText);
-      let x = this.dmp.diff_main(local,this.otherText);
+      let local = this.editorObject.txt.html();
+      // const local = $("#content").val();
+      // console.log(local);
+      // console.log(this.otherText);
+      let x = this.dmp.diff_main(local, this.otherText);
       let y = this.dmp.diff_cleanupSemantic(x);
-      console.log(x);
-      console.log(y);
       let patch = this.dmp.patch_make(local,x);
       let result = this.dmp.patch_apply(patch,local);
-      console.log("follow: change to result");
-      console.log(result);
-      $("#content").val(result[0]);
+      this.local = result[0];
+      this.editorObject.txt.html(result[0])
     },
     handleCommand(command) {
       if (command === 'account') {
