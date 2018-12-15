@@ -1,28 +1,26 @@
 <template>
   <el-container>
     <el-header>
-      <el-row class="head_top">
-        <el-col :span="2">logo</el-col>
-        <el-col :span="13">logo</el-col>
-        <el-col :span="3"><el-button type="primary" @click="connectDoc">加入编辑</el-button></el-col>
-        <el-col :span="2"><el-button @click="showLocal">群发消息</el-button></el-col>
-        <el-col :span="2"><el-button >分享</el-button></el-col>
+      <el-row>
         <el-col :span="1">
-          <el-dropdown>
-            <el-button type="" plain="">
-              <i class="el-icon-tickets"></i>
-            </el-button>
+          <img class="imglogo" src="../../assets/img/word.png">
+        </el-col>
+        <el-col :span="3">
+          <p><strong id="font">在线文档</strong></p>
+        </el-col>
+
+        <el-col :span="1" :offset="16">
+          <el-button type="primary" style="margin-top: 10px" @click="connectDoc">加入</el-button>
+        </el-col>
+        <el-col :span="1" :offset="1">
+          <el-dropdown  @command="handleCommand">
+            <img :src="imgurl" class="avatar">
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>保存为本地文件</el-dropdown-item>
-              <el-dropdown-item>1</el-dropdown-item>
-              <el-dropdown-item>2</el-dropdown-item>
-              <el-dropdown-item>3</el-dropdown-item>
-              <el-dropdown-item>4</el-dropdown-item>
+              <el-dropdown-item command="account">账号管理</el-dropdown-item>
+              <el-dropdown-item command="changeAccount">切换账号</el-dropdown-item>
+              <el-dropdown-item command="logout">退出账号</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-        </el-col>
-        <el-col :span="1">
-          <img src="@/assets/img/logo.png">
         </el-col>
       </el-row>
     </el-header>
@@ -53,7 +51,8 @@ export default {
       stompClient: null,
       dmp: new DiffMatchPatch(),
       otherText: '',
-      local: ''
+      local: '',
+      imgurl: '../static/img/logo.png',
     }
   },
   watch: {
@@ -73,50 +72,38 @@ export default {
     this.debouncedGetAnswer = _.debounce(this.synchronization, 500)
     this.debouncedGetAnswer2 = _.debounce(this.sendName, 500)
   },
-  mounted: {
-
+  mounted() {
+    // this.$options.methods.connectDoc();
   },
   methods: {
-    showLocal:function(){
-      alert(this.local);
-    },
-    contentChange: function() {
-      this.local = $("#content").val()
-    },
     connectDoc: function() {
       let self = this;
-      const socket = new SockJS( config.socket_url + '/endpointSang');
+      const socket = new SockJS( config.base_url + '/endpointSang');
       let stompClient = Stomp.Stomp.over(socket);
 
       console.log(this.stompClient);
       stompClient.connect({}, function (frame) {
         // setConnected(true);
         console.log('Connected:' + frame);
-        stompClient.subscribe('/topic/getResponse'+'/1', function (response) {
-          let something = JSON.parse(response.body).responseMessage;
+        stompClient.subscribe('/user/message/doc/4' , function (response) {
+          let something = JSON.parse(response.body).content;
           self.otherText = something;
         })
       });
       this.stompClient = stompClient;
     },
-    showResponse: function(message) {
-      // $("#content").val(message);
-      this.$options.methods.synchronization();
-    },
     sendName: function(){
       console.log(this.stompClient);
       let name = $('#content').val();
-      console.log('name:' + name);
-      this.stompClient.send("/welcome", {}, JSON.stringify({'name': name}));
+      let userId = '2';
+      let docId = '4';
+      this.stompClient.send("/message", {}, JSON.stringify({'content': name,'userid': userId,'docid': docId}));
     },
     disconnect: function(stompClient) {
       if (this.stompClient != null) {
         this.stompClient.disconnect();
       }
       console.log('Disconnected');
-    },
-    hello: function () {
-      console.log($);
     },
     synchronization: function () {
       const local = $("#content").val();
@@ -131,7 +118,26 @@ export default {
       console.log("follow: change to result");
       console.log(result);
       $("#content").val(result[0]);
-    }
+    },
+    handleCommand(command) {
+      if (command === 'account') {
+        this.account();
+      }else if (command === 'changeAccount') {
+        this.changeAccount();
+      }else {
+        this.logout();
+      }
+    },
+    account() {
+
+    },
+    changeAccount() {
+      //TODO: 清空cookie信息
+      this.$router.push({path: 'login'})
+    },
+    logout() {
+      //TODO: 清空cookie信息
+    },
   }
 }
 </script>
@@ -196,4 +202,25 @@ export default {
     box-shadow: 0 2px 4px rgba(20,20,20,.1);
   }
 
+  .imglogo{
+    max-width: 40px;
+    max-height: 40px;
+    vertical-align: middle;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  #font{
+    font-size: 22px;
+    align-items: center;
+    vertical-align: center;
+  }
+
+  .avatar{
+    margin-top: 10px;
+    max-width: 40px;
+    max-height: 40px;
+    vertical-align: middle;
+    align-items: center;
+  }
 </style>
