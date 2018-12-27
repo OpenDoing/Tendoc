@@ -5,6 +5,7 @@ import Login from '@/views/login/Login'
 import Edit from '@/views/edit/Edit'
 import Edit1 from '@/views/edit/Edit1'
 import Home from '@/views/Home'
+import UploadImage from '@/views/components/UploadImage'
 
 Vue.use(Router)
 
@@ -35,6 +36,11 @@ export default new Router({
       path: '/home',
       name: 'Home',
       component: Home
+    },
+    {
+      path: '/image',
+      name: 'UploadImage',
+      component: UploadImage
     }
   ]
 })

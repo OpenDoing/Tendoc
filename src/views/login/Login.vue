@@ -73,7 +73,7 @@
 
 <script>
 import store from '@/store/store.js'
-import config from '@/utils/global.js'
+import {config} from '@/utils/global.js'
 import axios from 'axios'
 export default {
   name: "login",
@@ -89,7 +89,7 @@ export default {
   },
   methods: {
     login: function () {
-      console.log(this.sharedState)
+      // console.log(this.sharedState)
       let url = config.base_url + '/login'
       axios
         .post(url, {
@@ -99,15 +99,25 @@ export default {
         .then(response => {
           let data = response.data
           if (data.errno === 0) {
-            console.log(123)
             let exp = new Date()
-            exp.setTime(exp.getTime() + 1000 * 60)
+            exp.setTime(exp.getTime() + 1000 * 3600)
             document.cookie = 'token=' + data.data + ';expires=' + exp.toGMTString()
-            this.$router.push('/edit1')
+            this.updatecookie (data.data)
+            this.$router.push('/home')
+          } else if (data.errno === 403) {
+            this.$notify.info({
+              title: '提示',
+              message: '账号密码不对!'
+            });
+          } else if (data.errno === 402) {
+            this.$notify.info({
+              title: '提示',
+              message: '请输入正确的用户名！'
+            });
           } else {
             this.$notify.info({
-              title: '消息',
-              message: '这是一条消息的提示消息'
+              title: '提示',
+              message: '这是个意外！'
             });
           }
         })
@@ -115,9 +125,28 @@ export default {
           console.log(error)
           this.$notify.error({
             title: '错误',
-            message: '这是一条错误的提示消息'
+            message: '请检查网络！'
           });
         })
+    },
+    updatecookie:function (token) {
+
+      let url = config.base_url+'/info?&token=' + token
+      axios
+        .get(url)
+        .then(data => {
+          let exp = new Date()
+          exp.setTime(exp.getTime() + 1000 * 3600)
+          document.cookie = 'user_id=' + data.data.data.userId + ';expires=' + exp.toGMTString()
+        })
+        .catch(error => {
+          console.log(error)
+          this.$notify.error({
+            title: '错误',
+            message: '请检查网络！'
+          });
+        })
+
     },
     register: function () {
       let url = config.base_url + '/register'

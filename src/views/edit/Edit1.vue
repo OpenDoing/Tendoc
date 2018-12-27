@@ -9,14 +9,17 @@
           <p><strong id="font">在线文档</strong></p>
         </el-col>
 
-        <el-col :span="1" :offset="16">
-          <el-button type="primary" style="margin-top: 10px" @click="connectDoc">加入</el-button>
+        <el-col :span="1" :offset="14">
+          <el-button type="primary" size="small" style="margin-top: 10px" @click="connectDoc">加入</el-button>
+        </el-col>
+        <el-col :span="1" :offset="1">
+          <el-button type="primary" size="small" style="margin-top: 10px" @click="save">保存</el-button>
         </el-col>
         <el-col :span="1" :offset="1">
           <el-dropdown  @command="handleCommand">
             <img :src="imgurl" class="avatar">
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="account">账号管理</el-dropdown-item>
+              <el-dropdown-item command="account">更换头像</el-dropdown-item>
               <el-dropdown-item command="changeAccount">切换账号</el-dropdown-item>
               <el-dropdown-item command="logout">退出账号</el-dropdown-item>
             </el-dropdown-menu>
@@ -35,27 +38,54 @@
         <div id="editor" class="text"></div>
       </div>
     </el-main>
+    <my-upload field="file"
+               @crop-success="cropSuccess"
+               @crop-upload-success="cropUploadSuccess"
+               @crop-upload-fail="cropUploadFail"
+               v-model="show"
+               :width="300"
+               :height="300"
+               :url="uploadPath"
+               :params="params"
+               :headers="headers">
+    </my-upload>
   </el-container>
+
+
 </template>
 
 <script>
 import SockJS from 'sockjs-client'
 import $ from 'jquery'
 import Stomp from 'stompjs'
-import config from '@/utils/global.js'
+import {config,checktoken,getCookie} from '@/utils/global.js'
 import DiffMatchPatch from 'diff-match-patch'
 import _ from 'lodash'
 import E from 'wangeditor'
+import myUpload from 'vue-image-crop-upload'
+import axios from 'axios'
 
 export default {
   name: 'Edit1',
+  components: {
+    'my-upload': myUpload
+  },
   data() {
     return {
+      user_id: getCookie('user_id'),
+      docId: this.$route.params.did,
+      show: false,
+      params: {
+        user_id: getCookie('user_id')
+      },
+      headers: {
+      },
+      uploadPath: config.base_url + '/fileUpload',
       stompClient: null,
       dmp: new DiffMatchPatch(),
       otherText: '',
       local: '',
-      imgurl: '../static/img/logo.png',
+      imgurl: '',
       editorObject: new E('#editorMenu', '#editor')
     }
   },
@@ -78,19 +108,82 @@ export default {
   },
   mounted() {
     this.initEditor()
+    this.initImage()
+    // this.initContent()
   },
   methods: {
+    initContent() {
+      let self = this
+      let docId = this.$route.params.did
+      let url = config.base_url + '/doc/get?docId=' + docId
+      axios
+        .get(url)
+        .then(response => {
+          console.log(response.data)
+          self.editorObject.txt.html(response.data.content)
+        })
+        .catch(err => {
+
+        })
+    },
+    save() {
+      const url = config.base_url + '/doc/save'
+      let docId = this.$route.params.did
+      let content = this.editorObject.txt.html()
+      let user_id = getCookie('user_id')
+      axios
+        .post(url,{
+          user_id,
+          docId,
+          content
+        })
+        .then(response => {
+          console.log(response)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    initImage: function() {
+      let url = config.base_url+'/info?&token=' + checktoken()
+      axios
+        .get(url)
+        .then(data => {
+          this.imgurl = config.image_url + data.data.data.avatar
+        })
+        .catch(error => {
+          console.log(error)
+          Toast({
+            message: "网络错误",
+            position: 'middle',
+            duration: 2000
+          });
+        })
+    },
     initEditor: function() {
       // let editor = new E('#editorMenu', '#editor')
       this.editorObject.customConfig.onchange = (html) => {
         this.local = html
       }
       this.editorObject.create()
-      this.editorObject.txt.html(this.local)
+      // this.editorObject.txt.html(this.local)
+      this.editorObject.$textElem.attr('contenteditable', false)
+      let docId = this.$route.params.did
+      let url = config.base_url + '/doc/get?docId=' + docId
+      axios
+        .get(url)
+        .then(response => {
+          let content = response.data.data.content
+          this.editorObject.txt.html(content)
+        })
+        .catch(err => {
+
+        })
     },
 
 
     connectDoc: function() {
+      this.editorObject.$textElem.attr('contenteditable', true)
       let self = this;
       const socket = new SockJS( config.base_url + '/endpointSang');
       let stompClient = Stomp.Stomp.over(socket);
@@ -99,7 +192,7 @@ export default {
       stompClient.connect({}, function (frame) {
         // setConnected(true);
         console.log('Connected:' + frame);
-        stompClient.subscribe('/user/message/doc/4' , function (response) {
+        stompClient.subscribe('/user/message/doc/' + self.docId, function (response) {
           let something = JSON.parse(response.body).content;
           self.otherText = something;
         })
@@ -110,9 +203,9 @@ export default {
       let self = this;
       console.log(this.stompClient);
       // let name = $('#content').val();
-      let userId = '2';
-      let docId = '4';
-      this.stompClient.send("/message", {}, JSON.stringify({'content': self.editorObject.txt.html(),'userid': userId,'docid': docId}));
+      if (this.stompClient !== null) {
+        this.stompClient.send("/message", {}, JSON.stringify({'content': self.editorObject.txt.html(),'userid': self.user_id,'docid': self.docId}));
+      }
     },
     disconnect: function(stompClient) {
       if (this.stompClient != null) {
@@ -142,7 +235,7 @@ export default {
       }
     },
     account() {
-
+      this.show = !this.show;
     },
     changeAccount() {
       //TODO: 清空cookie信息
@@ -151,7 +244,34 @@ export default {
     logout() {
       //TODO: 清空cookie信息
     },
-  }
+    cropSuccess(imgDataUrl, field){
+      console.log('-------- crop success --------');
+      this.imgDataUrl = imgDataUrl;
+    },
+    /**
+     * upload success
+     *
+     * [param] jsonData   服务器返回数据，已进行json转码
+     * [param] field
+     */
+    cropUploadSuccess(jsonData, field){
+      console.log('-------- upload success --------');
+      console.log(jsonData);
+      console.log('field: ' + field);
+      this.imgurl = config.image_url+jsonData.data;
+      config.avatar = config.base_url+'/image/'+jsonData.data;
+    },
+    /**
+     * upload fail
+     *
+     * [param] status    server api return error status, like 500
+     * [param] field
+     */
+    cropUploadFail(status, field){
+      console.log(status);
+      console.log('field: ' + field);
+    }
+  },
 }
 </script>
 
@@ -194,13 +314,12 @@ export default {
     background-color: #E9EEF3;
   }
   img{
-    width: auto;
-    height: auto;
-    max-width: 80%;
-    max-height: 80%;
+    width: 40px;
+    height: 40px;
+    /*max-width: 80%;*/
+    /*max-height: 80%;*/
     -webkit-border-radius: 10px;
     -moz-border-radius: 10px;
-    border-radius: 10px;
   }
   .el-header{
     padding: 0 10px;
@@ -231,9 +350,10 @@ export default {
 
   .avatar{
     margin-top: 10px;
-    max-width: 40px;
-    max-height: 40px;
+    width: 40px;
+    height: 40px;
     vertical-align: middle;
     align-items: center;
+    border-radius: 40px;
   }
 </style>

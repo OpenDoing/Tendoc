@@ -89,30 +89,78 @@
       </el-col>
       <el-col :span="1" :offset="1">
         <el-dropdown  @command="handleCommand">
-          <img :src="imgurl" class="avatar">
+          <img :src="img" class="avatar">
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="account">账号管理</el-dropdown-item>
+            <el-dropdown-item command="account">更换头像</el-dropdown-item>
             <el-dropdown-item command="changeAccount">切换账号</el-dropdown-item>
             <el-dropdown-item command="logout">退出账号</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </el-col>
     </el-row>
+
+    <my-upload field="file"
+               @crop-success="cropSuccess"
+               @crop-upload-success="cropUploadSuccess"
+               @crop-upload-fail="cropUploadFail"
+               v-model="show"
+               :width="300"
+               :height="300"
+               :url="uploadPath"
+               :params="params"
+               :headers="headers">
+    </my-upload>
   </el-header>
 </template>
 
 <script>
+import myUpload from 'vue-image-crop-upload'
+import {config,checktoken,getCookie} from '@/utils/global.js'
+import axios from 'axios'
 export default {
   name: 'THeader',
+  components: {
+    'my-upload': myUpload
+  },
   data() {
     return {
-      imgurl: '../static/img/logo.png'
+      show: false,
+      img: '',
+      params: {
+        user_id: getCookie('user_id'),
+      },
+      headers: {
+      },
+      uploadPath: config.base_url + '/fileUpload',
     }
   },
   methods: {
+    clearCookie() {
+      var date = new Date();
+      date.setTime(date.getTime() - 10000);
+      var keys = document.cookie.match(/[^ =;]+(?=\=)/g);
+      if (keys) {
+        for (var i = keys.length; i--;)
+          document.cookie = keys[i] + "=0; expire=" + date.toGMTString() + "; path=/";
+      }
+    },
     newDoc() {
       //TODO: 发请求新建文档，地址栏加  DOC ID
-      this.$router.push({path: 'edit1/8'})
+      const url = 'http://localhost:8000/doc/new'
+      // let date = new Date()
+      // let mytime = date.toLocaleTimeString()
+      axios
+        .post(url,{
+          userId: getCookie('user_id'),
+        })
+        .then(response => {
+          // console.log(response)
+          this.$router.push({path: 'edit1/'+response.data.data})
+        })
+        .catch(err => {
+          console.log(err)
+        })
+      // this.$router.push({path: 'edit1/8'})
     },
     handleCommand(command) {
       if (command === 'account') {
@@ -124,29 +172,74 @@ export default {
       }
     },
     account() {
-
+      this.show = !this.show;
     },
     changeAccount() {
       //TODO: 清空cookie信息
+      this.clearCookie()
       this.$router.push({path: 'login'})
     },
     logout() {
       //TODO: 清空cookie信息
+      this.clearCookie()
     },
+    cropSuccess(imgDataUrl, field){
+
+    },
+    /**
+     * upload success
+     *
+     * [param] jsonData   服务器返回数据，已进行json转码
+     * [param] field
+     */
+    cropUploadSuccess(jsonData, field){
+      console.log('-------- upload success --------');
+      console.log(jsonData);
+      console.log('field: ' + field);
+      this.img = config.image_url + jsonData.data;
+    },
+    /**
+     * upload fail
+     *
+     * [param] status    server api return error status, like 500
+     * [param] field
+     */
+    cropUploadFail(status, field){
+      console.log(status);
+      console.log('field: ' + field);
+    },
+    initImage() {
+        let url = config.base_url+'/info?&token=' + checktoken()
+        axios
+          .get(url)
+          .then(data => {
+            this.img = config.image_url + data.data.data.avatar
+          })
+          .catch(error => {
+            console.log(error)
+            Toast({
+              message: "网络错误",
+              position: 'middle',
+              duration: 2000
+            });
+          })
+    }
   },
   mounted() {
-
+    this.initImage()
   }
 }
 </script>
 
 <style scoped>
   .avatar{
+    margin-left: 5px;
     margin-top: 10px;
-    max-width: 40px;
-    max-height: 40px;
+    width: 40px;
+    height: 40px;
     vertical-align: middle;
     align-items: center;
+    border-radius: 40px;
   }
 
 
