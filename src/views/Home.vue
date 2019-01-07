@@ -5,13 +5,14 @@
     <div class="wrapper">
       <el-row style="margin-bottom: 15px">
         <el-col :span="6">
-          <el-dropdown>
+          <el-dropdown  @command="handleDocCommand">
             <span class="el-dropdown-link font">
-              <strong>全部文档</strong><i class="el-icon-arrow-down el-icon--right"></i>
+              <strong>筛选</strong><i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>我创建的</el-dropdown-item>
-              <el-dropdown-item>我加入的</el-dropdown-item>
+              <el-dropdown-item command="alldoc">全部文档</el-dropdown-item>
+              <el-dropdown-item command="created">我创建的</el-dropdown-item>
+              <el-dropdown-item command="joined">我加入的</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </el-col>
@@ -19,6 +20,7 @@
 
       <el-table
         v-loading="loading"
+        height="450"
         :data="tableData"
         stripe
         empty-text='您还没有文档，快去新建文档吧'
@@ -113,21 +115,21 @@
 
 
       <el-dialog
-        title="文档权限"
+        title="权限设置"
         :visible.sync="dialogFormVisible"
         width="40%">
-        <div style="padding-top: 20px">
-          <span>设置文档权限</span>
-          <el-select  v-model="select" placeholder="请设置权限">
-            <el-option
-              v-for="item in category"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              :disabled="item.disabled">
-            </el-option>
-          </el-select>
-        </div>
+        <!--<div style="padding-top: 20px">-->
+          <!--<span>设置文档权限</span>-->
+          <!--<el-select  v-model="select" placeholder="请设置权限">-->
+            <!--<el-option-->
+              <!--v-for="item in category"-->
+              <!--:key="item.value"-->
+              <!--:label="item.label"-->
+              <!--:value="item.value"-->
+              <!--:disabled="item.disabled">-->
+            <!--</el-option>-->
+          <!--</el-select>-->
+        <!--</div>-->
 
 
         <el-table
@@ -138,23 +140,23 @@
           style="width: 100%">
           <el-table-column
             prop="head"
-            label="设置成员权限">
+            label="">
             <template slot-scope="scope">
-              <img :src="scope.row.head" style="width: 40px;height: 40px">
+              <img :src="scope.row.avatar" style="width: 40px;height: 40px">
             </template>
           </el-table-column>
           <el-table-column
             prop="nickname"
-            >
+            label="成员ID">
             <template slot-scope="scope">
-              <p style="font-size: 16px;">{{scope.row.nickname}}</p>
+              <p style="font-size: 16px;">{{scope.row.creator}}</p>
             </template>
           </el-table-column>
           <el-table-column
             prop="operate"
-            >
+            label="设置权限">
             <template slot-scope="scope">
-              <el-select v-model="scope.row.aid" placeholder="请选择" size="small" style="width: 50%">
+              <el-select v-model="scope.row.status" placeholder="请选择" size="small" style="width: 100%">
                 <el-option
                   v-for="item in authSelect"
                   :key="item.value"
@@ -162,10 +164,10 @@
                   :value="item.value">
                 </el-option>
               </el-select>
-              <el-button
-                size="mini"
-                type="danger"
-                @click="handleDelete(scope.$index, userlist)">移除</el-button>
+              <!--<el-button-->
+                <!--size="mini"-->
+                <!--type="danger"-->
+                <!--@click="handleDelete(scope.$index, userlist)">移除</el-button>-->
             </template>
           </el-table-column>
         </el-table>
@@ -202,29 +204,25 @@ export default {
       category: [
         {
           value: 0,
-          label: '获得链接的人都可以查看'
+          label: '获得链接的人仅可查看'
         },
         {
           value: 1,
-          label: '获得链接的人都可以编辑'
+          label: '获得链接的人都可编辑'
         },
         {
           value: 2,
           label: '仅指定成员可查看/编辑'
-        },
-        {
-          value: 3,
-          label: '仅自己可查看/编辑'
-        },
+        }
       ],
       authSelect: [
         {
           label: '仅可读',
-          value: 0
+          value: 1
         },
         {
           label: '可编辑',
-          value: 1
+          value: 2
         }
 
       ],
@@ -232,29 +230,50 @@ export default {
       icon: 'el-icon-view',
       tips: '所有人都可编辑',
       tableData: [],
-      userlist: [
-        {
-          id: 5,
-          aid: 0,
-          nickname: 'test2',
-          head: '/static/img/logo.png',
-        },
-        {
-          id: 11,
-          aid: 1,
-          nickname: '腾讯文档',
-          head: '/static/img/word.png',
-        }
-      ]
+      userlist: []
     }
+  },
+  created: function() {
+    this.alldoc()
   },
   mounted: function () {
     this.authIcon(1)
     // this.initImage()
     this.init()
-    this.alldoc()
+    // this.alldoc()
   },
   methods: {
+    handleDocCommand(command) {
+      if (command === 'created' ) {
+        this.created()
+      }else if (command === 'joined') {
+        this.joined()
+      } else {
+        this.alldoc()
+      }
+    },
+    created() {
+      let self = this
+      self.loading = true
+      let url = config.base_url + '/doc/listdocType?user_id=' + getCookie('user_id') + '&type=1'
+      axios
+        .get(url)
+        .then(response=>{
+          self.tableData = response.data
+          self.loading = false
+        })
+    },
+    joined() {
+      let self = this
+      self.loading = true
+      let url = config.base_url + '/doc/listdocType?user_id=' + getCookie('user_id') + '&type=2'
+      axios
+        .get(url)
+        .then(response=>{
+          self.tableData = response.data
+          self.loading = false
+        })
+    },
     handleEdit(index, row) {
       console.log(index)
       console.log(row)
@@ -342,6 +361,7 @@ export default {
     },
     alldoc() {
       let self = this
+      self.loading = true
       const url = config.base_url + '/doc/listAlldoc?user_id=' + getCookie('user_id')
       axios
         .get(url)
@@ -356,7 +376,8 @@ export default {
           self.loading = false
         })
         .catch(err => {
-
+          this.$message.error('您暂无加入或创建的文档！');
+          self.loading = false
         })
     },
     handleDelete(index, rows) {
@@ -390,11 +411,23 @@ export default {
     },
     auth(index, row) {
       //TODO: 判定是否 文档拥有者
-      console.log(row.userId)
-      console.log(getCookie('user_id'))
+      let self = this
       if (row.creator !== this.myname) {
         this.$message.error('您不是文档创建者，没有权限设置！');
       } else {
+        let url = config.base_url + '/joinlist?docId=' + row.id +'&type=2'
+        axios
+          .get(url)
+          .then(response => {
+            for (let i = 0; i<response.data.data.length;i++){
+              response.data.data[i].avatar = config.image_url + response.data.data[i].avatar
+            }
+            self.userlist = response.data.data
+          })
+          .catch(err => {
+
+          })
+
         this.dialogFormVisible = true
       }
       // this.select =

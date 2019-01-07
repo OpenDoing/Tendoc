@@ -9,11 +9,14 @@
           <p><strong id="font">在线文档</strong></p>
         </el-col>
 
-        <el-col :span="1" :offset="14">
-          <el-button type="primary" size="small" style="margin-top: 10px" @click="connectDoc">加入</el-button>
+        <el-col :span="1" :offset="12">
+          <el-button type="primary" size="small" style="margin-top: 10px" @click="connectDoc">编辑</el-button>
         </el-col>
         <el-col :span="1" :offset="1">
           <el-button type="primary" size="small" style="margin-top: 10px" @click="save">保存</el-button>
+        </el-col>
+        <el-col :span="1" :offset="1">
+          <el-button type="primary" size="small" style="margin-top: 10px" @click="exportDoc">导出</el-button>
         </el-col>
         <el-col :span="1" :offset="1">
           <el-dropdown  @command="handleCommand">
@@ -64,6 +67,8 @@ import _ from 'lodash'
 import E from 'wangeditor'
 import myUpload from 'vue-image-crop-upload'
 import axios from 'axios'
+// import {saveAs} from '@/assets/js/FileSaver.js'
+// import '../../assets/js/jquery.wordexport'
 
 export default {
   name: 'Edit1',
@@ -105,13 +110,21 @@ export default {
     // 请参考：https://lodash.com/docs#debounce
     this.debouncedGetAnswer = _.debounce(this.synchronization, 500)
     this.debouncedGetAnswer2 = _.debounce(this.sendName, 500)
+    // this.nologin()
   },
   mounted() {
     this.initEditor()
     this.initImage()
-    // this.initContent()
+    // this.nologin()
   },
   methods: {
+    exportDoc() {
+      // console.log($)
+      // $("#editor").wordExport()
+      // $(document).ready(function ($) {
+      //   $("#editor").exportDoc.wordExport();
+      // });
+    },
     initContent() {
       let self = this
       let docId = this.$route.params.did
@@ -145,20 +158,23 @@ export default {
         })
     },
     initImage: function() {
-      let url = config.base_url+'/info?&token=' + checktoken()
-      axios
-        .get(url)
-        .then(data => {
-          this.imgurl = config.image_url + data.data.data.avatar
-        })
-        .catch(error => {
-          console.log(error)
-          Toast({
-            message: "网络错误",
-            position: 'middle',
-            duration: 2000
-          });
-        })
+      if (getCookie('token') === "") {
+        this.$router.push({path: '/edit/' + this.$route.params.did})
+        this.$message({
+          message: '您现在以游客模式进行预览',
+          type: 'warning'
+        });
+      } else{
+        let url = config.base_url+'/info?&token=' + getCookie('token')
+        axios
+          .get(url)
+          .then(data => {
+            this.imgurl = config.image_url + data.data.data.avatar
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      }
     },
     initEditor: function() {
       // let editor = new E('#editorMenu', '#editor')
@@ -180,10 +196,27 @@ export default {
 
         })
     },
+    join:function() {
+      let docId = this.$route.params.did
+      let self = this
+      let url = config.base_url + '/getAuth?userId=' + getCookie('user_id') + '&docId=' + docId
+      axios
+        .get(url)
+        .then(response=>{
+          console.log(response.data.data)
+          if (response.data.data.status = 2) {
+            self.editorObject.$textElem.attr('contenteditable', true)
+          } else {
+            self.$message.error("您只有可读的权限，不可进行编辑操作！")
+          }
+        })
+        .catch(err=>{
 
-
+        })
+    },
     connectDoc: function() {
-      this.editorObject.$textElem.attr('contenteditable', true)
+      this.join()
+      // this.editorObject.$textElem.attr('contenteditable', true)
       let self = this;
       const socket = new SockJS( config.base_url + '/endpointSang');
       let stompClient = Stomp.Stomp.over(socket);
