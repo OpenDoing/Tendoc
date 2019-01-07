@@ -103,7 +103,7 @@ export default {
             exp.setTime(exp.getTime() + 1000 * 3600)
             document.cookie = 'token=' + data.data + ';expires=' + exp.toGMTString()
             this.updatecookie (data.data)
-            this.$router.push('/home')
+            // this.$router.push('/home')
           } else if (data.errno === 403) {
             this.$notify.info({
               title: '提示',
@@ -132,12 +132,14 @@ export default {
     updatecookie:function (token) {
 
       let url = config.base_url+'/info?&token=' + token
+      let self = this
       axios
         .get(url)
         .then(data => {
           let exp = new Date()
           exp.setTime(exp.getTime() + 1000 * 3600)
           document.cookie = 'user_id=' + data.data.data.userId + ';expires=' + exp.toGMTString()
+          self.$router.push('/home')
         })
         .catch(error => {
           console.log(error)
