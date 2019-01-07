@@ -1,35 +1,22 @@
 <template>
 <el-container>
   <el-header>
-    <el-row  class="head_top">
-      <el-col :span="2">logo</el-col>
-      <el-col :span="13">logo</el-col>
-      <el-col :span="2"><el-button type="primary">分享</el-button></el-col>
-      <el-col :span="2"><el-button>权限</el-button></el-col>
-      <el-col :span="2"><el-button>新建</el-button></el-col>
+    <el-row>
       <el-col :span="1">
-        <el-dropdown>
-          <el-button type="" plain="">
-            <i class="el-icon-tickets"></i>
-          </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>保存为本地文件</el-dropdown-item>
-            <el-dropdown-item>1</el-dropdown-item>
-            <el-dropdown-item>2</el-dropdown-item>
-            <el-dropdown-item>3</el-dropdown-item>
-            <el-dropdown-item>4</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
+        <img class="imglogo" src="../../assets/img/word.png">
       </el-col>
-      <el-col :span="1">
-        <img src="@/assets/img/logo.png">
+      <el-col :span="3">
+        <p><strong id="font">在线文档</strong></p>
+      </el-col>
+      <el-col :span="2" :offset="18" style=" margin-top: 10px;">
+        <el-button type="primary" @click="login">登录</el-button>
       </el-col>
     </el-row>
   </el-header>
   <el-main class="bg">
     <div class="edit_wrapper">
-          <div ref="editorMenu" class="toolbar"></div>
-          <div ref="editor" class="text"></div>
+      <div id="editorMenu" class="toolbar"></div>
+      <div id="editor" class="text"></div>
     </div>
   </el-main>
 </el-container>
@@ -37,17 +24,42 @@
 
 <script>
 import E from 'wangeditor'
+import {config,checktoken,getCookie} from '@/utils/global.js'
+import axios from 'axios'
 export default {
   name: "Edit",
   data() {
-    return {}
+    return {
+      editorObject: new E('#editorMenu', '#editor')
+    }
   },
   mounted() {
-    let editor = new E(this.$refs.editorMenu, this.$refs.editor)
-    editor.customConfig.onchange = (html) => {
-      this.editorContent = html
+    this.initEditor()
+  },
+  methods: {
+    initEditor: function() {
+      // let editor = new E('#editorMenu', '#editor')
+      this.editorObject.customConfig.onchange = (html) => {
+        this.local = html
+      }
+      this.editorObject.create()
+      // this.editorObject.txt.html(this.local)
+      this.editorObject.$textElem.attr('contenteditable', false)
+      let docId = this.$route.params.did
+      let url = config.base_url + '/doc/get?docId=' + docId
+      axios
+        .get(url)
+        .then(response => {
+          let content = response.data.data.content
+          this.editorObject.txt.html(content)
+        })
+        .catch(err => {
+
+        })
+    },
+    login() {
+      this.$router.push({path: '/login'})
     }
-    editor.create()
   }
 }
 </script>
