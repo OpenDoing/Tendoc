@@ -68,7 +68,7 @@ import E from 'wangeditor'
 import myUpload from 'vue-image-crop-upload'
 import axios from 'axios'
 // import {saveAs} from '@/assets/js/FileSaver.js'
-// import '../../assets/js/jquery.wordexport'
+// import word from '../../assets/js/jquery.wordexport'
 
 export default {
   name: 'Edit1',
@@ -119,11 +119,10 @@ export default {
   },
   methods: {
     exportDoc() {
-      // console.log($)
-      // $("#editor").wordExport()
-      // $(document).ready(function ($) {
-      //   $("#editor").exportDoc.wordExport();
-      // });
+      //下面这行很关键，确保页面加载完之后再执行，否则会报错 wordExport is not a function
+      jQuery(document).ready(function ($) {
+        $("#editor").wordExport()
+      });
     },
     initContent() {
       let self = this

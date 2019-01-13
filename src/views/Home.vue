@@ -174,7 +174,7 @@
 
         <div slot="footer" class="dialog-footer">
           <el-button @click="dialogFormVisible = false">取 消</el-button>
-          <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+          <el-button type="primary" @click="updateAuth">确 定</el-button>
         </div>
       </el-dialog>
     </div>
@@ -243,6 +243,18 @@ export default {
     // this.alldoc()
   },
   methods: {
+    //更新用户列表权限
+    updateAuth() {
+      let url = config.base_url + '/authlist'
+      axios
+        .post(url,{
+          userlist: this.userlist
+        })
+        .then(response=>{
+          console.log(response)
+        })
+      this.dialogFormVisible = false
+    },
     handleDocCommand(command) {
       if (command === 'created' ) {
         this.created()
