@@ -1,6 +1,6 @@
 const config = {
+  // base_url: 'http://47.100.124.249:8000',
   base_url: 'http://localhost:8000',
-  // base_url: 'http://192.168.1.141:8000',
   image_url: 'http://localhost:8000/image/'
 }
 

@@ -11,6 +11,7 @@ Vue.use(Router)
 
 export default new Router({
   mode: 'history',
+  base: '/OnlineDoc/',
   routes: [
     {
       path: '/',
@@ -42,5 +43,10 @@ export default new Router({
       name: 'UploadImage',
       component: UploadImage
     }
+    // {
+    //   path: '/draw',
+    //   name: 'Draw',
+    //   component: Draw
+    // }
   ]
 })

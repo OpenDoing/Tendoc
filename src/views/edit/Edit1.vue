@@ -10,13 +10,18 @@
         </el-col>
 
         <el-col :span="1" :offset="12">
-          <el-button type="primary" size="small" style="margin-top: 10px" @click="connectDoc">编辑</el-button>
+          <el-button type="primary" size="medium" style="margin-top: 10px" @click="connectDoc">编辑</el-button>
         </el-col>
         <el-col :span="1" :offset="1">
-          <el-button type="primary" size="small" style="margin-top: 10px" @click="save">保存</el-button>
+          <el-button
+            type="primary"
+            size="medium"
+            style="margin-top: 10px"
+            @click="save"
+            v-loading.fullscreen.lock="saveloading">保存</el-button>
         </el-col>
         <el-col :span="1" :offset="1">
-          <el-button type="primary" size="small" style="margin-top: 10px" @click="exportDoc">导出</el-button>
+          <el-button type="primary" size="medium" style="margin-top: 10px" @click="exportDoc">导出</el-button>
         </el-col>
         <el-col :span="1" :offset="1">
           <el-dropdown  @command="handleCommand">
@@ -24,12 +29,29 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="account">更换头像</el-dropdown-item>
               <el-dropdown-item command="changeAccount">切换账号</el-dropdown-item>
-              <el-dropdown-item command="logout">退出账号</el-dropdown-item>
+              <el-dropdown-item command="asideRecord">操作记录</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </el-col>
       </el-row>
     </el-header>
+    <el-container>
+    <el-aside width="250px" class="aside" v-show="asideDisplay">
+      <div>
+        <b style="font-size: 18px">操作记录</b>
+        <i class="el-icon-close" @click="closeAside"></i>
+      </div>
+
+      <div>
+        <ul v-for="(record, index) in recordList" >
+          <li class="record" @click="recordRollback(record.content)">
+            <div><b>第{{index + 1}}版</b>&nbsp;&nbsp;&nbsp;{{record.modifyTime}}</div>
+            <div><b>操作人：</b>{{record.saver}}</div>
+            <div class="recordContent"><b>文档内容：</b>{{record.content}}</div>
+          </li>
+        </ul>
+      </div>
+    </el-aside>
     <el-main class="bg">
       <div class="edit_wrapper">
         <!--<div class="editorbody">-->
@@ -52,6 +74,7 @@
                :params="params"
                :headers="headers">
     </my-upload>
+    </el-container>
   </el-container>
 
 
@@ -91,7 +114,27 @@ export default {
       otherText: '',
       local: '',
       imgurl: '',
-      editorObject: new E('#editorMenu', '#editor')
+      editorObject: new E('#editorMenu', '#editor'),
+      saveloading: false,
+      recordList:[
+        {
+          "id": 1,
+          "userId": 2,
+          "docId": 2,
+          "modifyTime": "2019-01-19T14:01:19",
+          "content": "阿萨德asdsd富士康东方神娃分不开价位高帮客人水电费看见GV",
+          "saver": "乌尔苏拉"
+        },
+        {
+          "id": 1,
+          "userId": 2,
+          "docId": 2,
+          "modifyTime": "2013-02-19T14:01:19",
+          "content": "666",
+          "saver": "白的"
+        }
+      ],
+      asideDisplay: false
     }
   },
   watch: {
@@ -118,6 +161,30 @@ export default {
     // this.nologin()
   },
   methods: {
+    //关闭页面侧边栏
+    closeAside() {
+      this.asideDisplay = false;
+    },
+    //点击侧边栏记录，回滚编辑器内容
+    recordRollback(content) {
+      this.editorObject.txt.html(content)
+
+    },
+    asideRecord() {
+      let self = this
+      let docId = this.$route.params.did
+      let url = config.base_url + '/record/list?docId=' + docId
+      axios
+        .get(url)
+        .then(response => {
+          console.log(response.data)
+          this.recordList = response.data
+          this.asideDisplay= true
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
     exportDoc() {
       //下面这行很关键，确保页面加载完之后再执行，否则会报错 wordExport is not a function
       jQuery(document).ready(function ($) {
@@ -139,6 +206,7 @@ export default {
         })
     },
     save() {
+      this.saveloading = true
       const url = config.base_url + '/doc/save'
       let docId = this.$route.params.did
       let content = this.editorObject.txt.html()
@@ -150,10 +218,15 @@ export default {
           content
         })
         .then(response => {
-          console.log(response)
+          this.saveloading = false
+          this.$message({
+            message: '保存成功！',
+            type: 'success'
+          });
         })
         .catch(err => {
-          console.log(err)
+          this.saveloading = false
+          this.$message.error('保存失败！'+err);
         })
     },
     initImage: function() {
@@ -203,7 +276,11 @@ export default {
         .get(url)
         .then(response=>{
           console.log(response.data.data)
-          if (response.data.data.status = 2) {
+          if (response.data.data.status === 2) {
+            this.$message({
+              message: '您对此文档有可编辑权限！',
+              type: 'success'
+            });
             self.editorObject.$textElem.attr('contenteditable', true)
           } else {
             self.$message.error("您只有可读的权限，不可进行编辑操作！")
@@ -263,7 +340,7 @@ export default {
       }else if (command === 'changeAccount') {
         this.changeAccount();
       }else {
-        this.logout();
+        this.asideRecord();
       }
     },
     account() {
@@ -272,9 +349,6 @@ export default {
     changeAccount() {
       //TODO: 清空cookie信息
       this.$router.push({path: 'login'})
-    },
-    logout() {
-      //TODO: 清空cookie信息
     },
     cropSuccess(imgDataUrl, field){
       console.log('-------- crop success --------');
@@ -387,5 +461,17 @@ export default {
     vertical-align: middle;
     align-items: center;
     border-radius: 40px;
+  }
+
+  .aside{
+    background-color: #fff;
+    /*display: none;*/
+    /*width: 300px;*/
+    border: 1px solid lightslategray;
+  }
+  .recordContent{
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 </style>

@@ -146,7 +146,7 @@ export default {
     },
     newDoc() {
       //TODO: 发请求新建文档，地址栏加  DOC ID
-      const url = 'http://localhost:8000/doc/new'
+      const url = config.base_url + '/doc/new'
       // let date = new Date()
       // let mytime = date.toLocaleTimeString()
       axios

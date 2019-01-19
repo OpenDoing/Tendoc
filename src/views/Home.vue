@@ -31,17 +31,17 @@
           width="300">
           <template slot-scope="scope">
             <div style="float:left;display: flex">
-            <div v-if="scope.row.authID === 0" style="width: 20px">
+            <div v-if="scope.row.authID === 1" style="width: 20px">
               <el-tooltip class="item" effect="dark" content="获得链接的人都可以查看" placement="bottom">
                 <i class="el-icon-view"></i>
               </el-tooltip>
             </div>
-            <div v-else-if="scope.row.authID === 1" style="width: 20px">
+            <div v-else-if="scope.row.authID === 2" style="width: 20px">
               <el-tooltip class="item" effect="dark" content="获得链接的人都可以编辑" placement="bottom">
                 <i class="el-icon-edit"></i>
               </el-tooltip>
             </div>
-            <div v-else-if="scope.row.authID === 2" style="width: 20px">
+            <div v-else-if="scope.row.authID === 3" style="width: 20px">
               <el-tooltip class="item" effect="dark" content="仅指定成员可查看/编辑" placement="bottom">
                 <i class="el-icon-document"></i>
               </el-tooltip>
