@@ -38,16 +38,17 @@
     <el-container>
     <el-aside width="250px" class="aside" v-show="asideDisplay">
       <div>
-        <b style="font-size: 18px">操作记录</b>
-        <i class="el-icon-close" @click="closeAside"></i>
+        <b style="font-size: 18px;margin-left: 15px">操作记录</b>
+        <i class="el-icon-close" @click="closeAside" style="margin-right: 10px;background-color: #f1f1f1;float: right;"></i>
+        <hr>
       </div>
 
-      <div>
+      <div class="record">
         <ul v-for="(record, index) in recordList" >
           <li class="record" @click="recordRollback(record.content)">
-            <div><b>第{{index + 1}}版</b>&nbsp;&nbsp;&nbsp;{{record.modifyTime}}</div>
-            <div><b>操作人：</b>{{record.saver}}</div>
-            <div class="recordContent"><b>文档内容：</b>{{record.content}}</div>
+            <div style="margin-top: 15px;"><b>第{{index + 1}}版</b>&nbsp;&nbsp;&nbsp;{{record.modifyTime}}</div>
+            <div style="margin-top: 10px;">操作人：{{record.saver}}</div>
+            <div class="recordContent">文档内容：{{record.content}}</div>
           </li>
         </ul>
       </div>
@@ -179,7 +180,11 @@ export default {
         .then(response => {
           console.log(response.data)
           this.recordList = response.data
-          this.asideDisplay= true
+          if (response.data.length === 0) {
+            this.$message.error("此文档暂无操作记录，在编辑框添加你的文档内容吧！")
+          } else {
+            this.asideDisplay= true
+          }
         })
         .catch(err => {
           console.log(err)
@@ -348,7 +353,7 @@ export default {
     },
     changeAccount() {
       //TODO: 清空cookie信息
-      this.$router.push({path: 'login'})
+      this.$router.push({path: '/login'})
     },
     cropSuccess(imgDataUrl, field){
       console.log('-------- crop success --------');
@@ -468,10 +473,16 @@ export default {
     /*display: none;*/
     /*width: 300px;*/
     border: 1px solid lightslategray;
+    padding-top: 20px;
+    padding-right: 15px;
   }
+  /*多余文本用...代替样式*/
   .recordContent{
+    margin-top: 8px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
   }
+  /*操作记录划过效果*/
+  ul li:hover{ color:#000;  background: lightgrey; }
 </style>

@@ -81,10 +81,10 @@
       <el-col :span="3">
         <p><strong id="font">在线文档</strong></p>
       </el-col>
-      <el-col :span="7" :offset="2">
-        <el-input type="text" class="search" placeholder="请输入搜索名字" ></el-input>
-      </el-col>
-      <el-col :span="1" :offset="7">
+      <!--<el-col :span="7" :offset="2">-->
+        <!--<el-input type="text" class="search" placeholder="请输入搜索名字" ></el-input>-->
+      <!--</el-col>-->
+      <el-col :span="1" :offset="16">
         <el-button type="primary" style="margin-top: 10px" @click="newDoc">新建文档</el-button>
       </el-col>
       <el-col :span="1" :offset="1">
@@ -93,7 +93,7 @@
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="account">更换头像</el-dropdown-item>
             <el-dropdown-item command="changeAccount">切换账号</el-dropdown-item>
-            <el-dropdown-item command="logout">退出账号</el-dropdown-item>
+            <!--<el-dropdown-item command="logout">退出账号</el-dropdown-item>-->
           </el-dropdown-menu>
         </el-dropdown>
       </el-col>
@@ -115,7 +115,7 @@
 
 <script>
 import myUpload from 'vue-image-crop-upload'
-import {config,checktoken,getCookie} from '@/utils/global.js'
+import {config,checktoken,getCookie} from '../../utils/global.js'
 import axios from 'axios'
 export default {
   name: 'THeader',
@@ -209,6 +209,12 @@ export default {
       console.log('field: ' + field);
     },
     initImage() {
+      if (checktoken() === -1) {
+        this.$notify.warning({
+          title: '页面过期',
+          message: '您的token已过期，正跳转到登录页面'
+        });
+      }
         let url = config.base_url+'/info?&token=' + checktoken()
         axios
           .get(url)
@@ -216,11 +222,9 @@ export default {
             this.img = config.image_url + data.data.data.avatar
           })
           .catch(error => {
-            console.log(error)
-            Toast({
-              message: "网络错误",
-              position: 'middle',
-              duration: 2000
+            this.$notify.error({
+              title: '错误',
+              message: '网络链接超时！'
             });
           })
     }

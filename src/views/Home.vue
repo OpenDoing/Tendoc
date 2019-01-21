@@ -32,14 +32,14 @@
           <template slot-scope="scope">
             <div style="float:left;display: flex">
             <div v-if="scope.row.authID === 1" style="width: 20px">
-              <el-tooltip class="item" effect="dark" content="获得链接的人都可以查看" placement="bottom">
+              <el-tooltip class="item" effect="dark" content="此文档你只有可读的权限" placement="bottom">
                 <i class="el-icon-view"></i>
               </el-tooltip>
             </div>
             <div v-else-if="scope.row.authID === 2" style="width: 20px">
-              <el-tooltip class="item" effect="dark" content="获得链接的人都可以编辑" placement="bottom">
-                <i class="el-icon-edit"></i>
-              </el-tooltip>
+                <el-tooltip class="item" effect="dark" content="此文档你拥有可编辑的权限" placement="bottom">
+                  <i class="el-icon-edit"></i>
+                </el-tooltip>
             </div>
             <div v-else-if="scope.row.authID === 3" style="width: 20px">
               <el-tooltip class="item" effect="dark" content="仅指定成员可查看/编辑" placement="bottom">
@@ -118,19 +118,24 @@
         title="权限设置"
         :visible.sync="dialogFormVisible"
         width="40%">
-        <!--<div style="padding-top: 20px">-->
-          <!--<span>设置文档权限</span>-->
-          <!--<el-select  v-model="select" placeholder="请设置权限">-->
-            <!--<el-option-->
-              <!--v-for="item in category"-->
-              <!--:key="item.value"-->
-              <!--:label="item.label"-->
-              <!--:value="item.value"-->
-              <!--:disabled="item.disabled">-->
-            <!--</el-option>-->
-          <!--</el-select>-->
-        <!--</div>-->
-
+        <div style="padding-top: 10px">
+          <!--<el-row class="vcenter">-->
+            <!--<el-col :span="6">-->
+              <!--<span style="margin-left: 20px;font-size: 17px"><b>设置文档权限</b></span>-->
+            <!--</el-col>-->
+            <!--<el-col :span="16" :offset="1">-->
+              <!--<el-select  v-model="select" placeholder="请设置权限" style="width: 90%">-->
+                <!--<el-option-->
+                  <!--v-for="item in category"-->
+                  <!--:key="item.value"-->
+                  <!--:label="item.label"-->
+                  <!--:value="item.value"-->
+                  <!--:disabled="item.disabled">-->
+                <!--</el-option>-->
+              <!--</el-select>-->
+            <!--</el-col>-->
+          <!--</el-row>-->
+        </div>
 
         <el-table
           :data="userlist"
@@ -203,16 +208,12 @@ export default {
       authope: '设置权限',
       category: [
         {
-          value: 0,
-          label: '获得链接的人仅可查看'
-        },
-        {
           value: 1,
-          label: '获得链接的人都可编辑'
+          label: '获得链接的人只有查看的权限'
         },
         {
           value: 2,
-          label: '仅指定成员可查看/编辑'
+          label: '获得链接的人都可以进行编辑'
         }
       ],
       authSelect: [
@@ -251,7 +252,14 @@ export default {
           userlist: this.userlist
         })
         .then(response=>{
+          this.$message({
+            message: '权限设置成功',
+            type: 'success'
+          })
           console.log(response)
+        })
+        .catch(err=>{
+          this.$message.error("权限设置失败")
         })
       this.dialogFormVisible = false
     },
@@ -359,6 +367,12 @@ export default {
       });
     },
     init() {
+      if (checktoken() === -1) {
+        this.$notify.warning({
+          title: '页面过期',
+          message: '您的token已过期，正跳转到登录页面'
+        });
+      }
       let url = config.base_url+'/info?&token=' + checktoken()
       axios
         .get(url)
@@ -506,6 +520,13 @@ export default {
     /*display: flex;*/
     /*justify-content: center;*/
 
+  }
+  /*垂直居中*/
+  .vcenter{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 15px;
   }
 
 </style>

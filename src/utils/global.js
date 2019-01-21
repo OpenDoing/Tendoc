@@ -18,9 +18,9 @@ function getCookie(name) {
 
 //读取token
 function checktoken() {
-  if(!getCookie('token')){
+  if(!getCookie('token') || getCookie('token') === '0'){
     window.location.href = "/login";
-    return;
+    return -1;
   }
   return getCookie('token');
 }
