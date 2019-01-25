@@ -28,7 +28,7 @@
             <img :src="imgurl" class="avatar">
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="account">更换头像</el-dropdown-item>
-              <el-dropdown-item command="changeAccount">切换账号</el-dropdown-item>
+              <el-dropdown-item command="changeAccount">退出账号</el-dropdown-item>
               <el-dropdown-item command="asideRecord">操作记录</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>

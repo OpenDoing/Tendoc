@@ -152,7 +152,8 @@ export default {
     },
     register: function () {
       let url = config.base_url + '/register'
-      console.log(this.rusername)
+      const self = this
+
       axios({
         url: url,
         method:"post",
@@ -165,7 +166,7 @@ export default {
         }
       })
         .then(function (response) {
-          this.$notify({
+          self.$notify({
             title: '成功',
             message: '账号成功注册',
             type: 'success'
