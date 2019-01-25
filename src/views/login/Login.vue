@@ -165,10 +165,17 @@ export default {
         }
       })
         .then(function (response) {
-          console.log(response);
+          this.$notify({
+            title: '成功',
+            message: '账号成功注册',
+            type: 'success'
+          });
         })
         .catch(function (error) {
-          console.log(error);
+          this.$notify.error({
+            title: '错误',
+            message: '注册失败'
+          });
         });
 
     }
