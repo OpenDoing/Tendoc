@@ -6,11 +6,11 @@ import Edit from '@/views/edit/Edit'
 import Edit1 from '@/views/edit/Edit1'
 import Home from '@/views/Home'
 import UploadImage from '@/views/components/UploadImage'
-
+import Edit2 from '@/views/edit/Edit2'
 Vue.use(Router)
 
 export default new Router({
-  mode: 'history',
+  // mode: 'history',
   base: '/OnlineDoc/',
   routes: [
     {
@@ -32,6 +32,11 @@ export default new Router({
       path: '/edit1/:did',
       name: 'Edit1',
       component: Edit1
+    },
+    {
+      path: '/edit2/:did',
+      name: 'Edit2',
+      component: Edit2
     },
     {
       path: '/home',

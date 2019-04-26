@@ -6,9 +6,10 @@ import router from './router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 // import E from 'wangeditor'
-
+import VueUeditorWrap from 'vue-ueditor-wrap'
 Vue.config.productionTip = false
 Vue.use(ElementUI);
+Vue.component('vue-ueditor-wrap', VueUeditorWrap)
 // Vue.use(E);
 /* eslint-disable no-new */
 new Vue({
